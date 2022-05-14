@@ -1,5 +1,4 @@
-## Flow of notebooks: \
+## Flow of notebooks:
 1. EDA
-2. Imputation
-3. Feature selection and engineering
-4. Model/test
+2. Signature_FE_and_Model
+3. Model analysis
