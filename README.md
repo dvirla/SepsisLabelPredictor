@@ -9,3 +9,8 @@
 8. utils/feature_selection.py - Script containing functions for selecting features prior to model training and prediction.
 9. utils/signature.py  - Script for creating signature per patient prior to model training and prediction.
 10. utils/statistics.py - Script for statistical tests and analysis to use in EDA notebook.
+
+
+## Reproduction Instruction
+Run the notebook Signature_FE_and_Model which will save `./model.pkl`. This will create a pickle file with the pipeline for XGBoost classifier.
+For testing on different files, run the script `predict.py` with argument directing to desired path (e.g. "/data/train/") and this will create `prediction.csv`, without headers, where the first column is the patient's ID and the second is the prediction.
