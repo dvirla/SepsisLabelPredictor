@@ -9,6 +9,7 @@
 8. utils/feature_selection.py - Script containing functions for selecting features prior to model training and prediction.
 9. utils/signature.py  - Script for creating signature per patient prior to model training and prediction.
 10. utils/statistics.py - Script for statistical tests and analysis to use in EDA notebook.
+11. predict.py - The requested file, writing the requested predictions csv.
 
 
 ## Reproduction Instruction
