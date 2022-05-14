@@ -1,0 +1,17 @@
+backup/*
+data/*
+*.csv
+param_tuning/*
+signature_trial/*
+.bash*
+.Xauth*
+.ipy*
+.jupyter*
+.conda*
+.cache/*
+.local/*
+.profile*
+.python_history*
+.viminfo*
+.wget-hsts*
+*__pycache*
