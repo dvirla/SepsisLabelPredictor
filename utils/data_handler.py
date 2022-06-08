@@ -6,16 +6,15 @@ from sklearn.base import BaseEstimator, TransformerMixin
 import pickle
 from utils import signature
 
-def load_data(data_path, real_test):
+def load_data(data_path):
     dfs = []
     for file in tqdm(os.listdir(data_path)):
         patient_num = int(file.split('patient_')[1].split('.psv')[0])
         df = pd.read_csv(os.path.join(data_path, file), sep='|')
         # Truncate to first hour (six hours before detecting sepsis)
-        if not real_test:
-            if len(df[df['SepsisLabel'] == 1]) > 0:
-                first_sepsis_idx = df[df['SepsisLabel'] == 1][['SepsisLabel']].idxmin().values[0]
-                df = df[df.index <= first_sepsis_idx]
+        if len(df[df['SepsisLabel'] == 1]) > 0:
+            first_sepsis_idx = df[df['SepsisLabel'] == 1][['SepsisLabel']].idxmin().values[0]
+            df = df[df.index <= first_sepsis_idx]
         df['Patient'] = patient_num
         dfs.append(df)
     all_df = pd.concat(dfs)
@@ -129,8 +128,8 @@ class CustomImputerTransformer(BaseEstimator, TransformerMixin):
         return x.fillna(self.mean_series)
         
     
-def get_model_prepared_dataset(data_folder, not_segnificant_cols=None, real_test=False):
-    all_train_df = load_data(data_folder, real_test)
+def get_model_prepared_dataset(data_folder, not_segnificant_cols=None):
+    all_train_df = load_data(data_folder)
     all_train_df = leave_only_reasonable_values(all_train_df)
     all_train_df = add_additional_features(all_train_df)
     
@@ -141,8 +140,7 @@ def get_model_prepared_dataset(data_folder, not_segnificant_cols=None, real_test
         not_segnificant_cols = ['PaCO2', 'PTT', 'EtCO2', 'Platelets']
     d_cols = set.union(set(nan_cols), set(not_segnificant_cols))
     agg_dict = {col: [np.nanmean, np.nanstd, np.nanmin, np.nanmax, np.nanmedian, 'skew'] for col in all_train_df.columns if col not in d_cols and col not in ['Patient', 'SepsisLabel']}
-    if not real_test:
-        agg_dict['SepsisLabel'] = 'max'
+    agg_dict['SepsisLabel'] = 'max'
     agg_dict['Unit1'] = np.nanmax
     agg_dict['Unit2'] = np.nanmax
     agg_dict['Gender'] = [np.nanmax, 'count']
@@ -155,21 +153,16 @@ def get_model_prepared_dataset(data_folder, not_segnificant_cols=None, real_test
 
     signature_df = signature.calc_signature_for_all_df(all_train_df, signature_features=signature_cols, 
                                                        truncation_level=truncation, n_records=n_records)
-    
+    signature_df = signature_df.set_index('Patient')
     
     n_records_for_patient = 5
     all_train_df = all_train_df.groupby('Patient').tail(n_records_for_patient).reset_index(drop=True).sort_values(['Patient', 'ICULOS'])
     df = all_train_df.groupby('Patient').agg(agg_dict)
     df.columns = ['_'.join(col).strip() for col in df.columns.values]
     signature_df[df.columns] = df
-    df = signature_df
-    if real_test:
-        nan_skew_cols = ['Calcium_skew', 'Creatinine_skew', 'Phosphate_skew', 'Bilirubin_total_skew']
-        X = df.drop(columns=['Patient']+nan_skew_cols)
-        return X
-    
+    df = signature_df    
     nan_skew_cols = ['Calcium_skew', 'Creatinine_skew', 'Phosphate_skew', 'Bilirubin_total_skew']
-    X = df.drop(columns=['SepsisLabel_max', 'Patient']+nan_skew_cols)
+    X = df.drop(columns=['SepsisLabel_max'] + nan_skew_cols)
     y = df['SepsisLabel_max']
     
     return X, y
