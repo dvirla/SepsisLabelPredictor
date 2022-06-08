@@ -8,7 +8,7 @@ import pandas as pd
 if __name__ == "__main__":
     data_path = sys.argv[1]
     
-    X, _ = data_handler.get_model_prepared_dataset(data_path, real_test=False)
+    X, _ = data_handler.get_model_prepared_dataset(data_path)
     with open('./model.pkl', 'rb') as f:
         pipe = pickle.load(f)
     
